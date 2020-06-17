@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import com.coolweather.android.db.City;
 import com.coolweather.android.db.County;
 import com.coolweather.android.db.Province;
+import com.coolweather.android.gson.Weather;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utility;
 
@@ -106,6 +107,13 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position);
                     queryCounties();
                 }
+                else if (currentLevel == LEVEL_COUNTY){
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
+                }
             }
         });
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -190,6 +198,44 @@ public class ChooseAreaFragment extends Fragment {
       private void queryFromServer(String address,final String type){
             showProgressDialog();
           HttpUtil.sendOkHttpRequest(address, new Callback() {
+
+
+              @Override
+              public void onResponse(Call call, Response response) throws IOException {
+                  String responseText = response.body().string();
+                  boolean resulet = false;
+                  if ("province".equals(type)){
+                      resulet = Utility.handleProvinceResponse(responseText);
+
+                  }else if ("city".equals(type)){
+                      resulet = Utility.handleCityResponse(responseText,selectedProvince.getId());
+                  }else if ("county".equals(type)){
+                      resulet = Utility.handleCountyResponse(responseText,selectedCity.getId());
+                  }
+                  if (resulet){
+                      getActivity().runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              closeProgressDialog();
+                              if ("province".equals(type)){
+                                  queryProvinces();
+                              }else if ("city".equals(type)){
+                                  queryCities();
+                              }else if ("county".equals(type)){
+                                  queryCounties();
+                              }
+                          }
+                      });
+                  }
+              }
+
+
+
+
+
+
+
+
               @Override
               public void onFailure(Call call, IOException e) {
                   //tonguo   runOnUiThread()  返回主线程处理逻辑
@@ -203,34 +249,34 @@ public class ChooseAreaFragment extends Fragment {
 
               }
 
-              @Override
-              public void onResponse(Call call, Response response) throws IOException {
-               String responseText = response.body().string();
-               boolean resulet = false;
-               if ("province".equals(type)){
-                   resulet = Utility.handleProvinceResponse(responseText);
-
-               }else if ("city".equals(type)){
-                   resulet = Utility.handleCityResponse(responseText,selectedProvince.getId());
-               }else if ("county".equals(type)){
-                   resulet = Utility.handleCountyResponse(responseText,selectedCity.getId());
-               }
-               if (resulet){
-                   getActivity().runOnUiThread(new Runnable() {
-                       @Override
-                       public void run() {
-                           closeProgressDialog();
-                           if ("province".equals(type)){
-                               queryProvinces();
-                           }else if ("city".equals(type)){
-                               queryCities();
-                           }else if ("county".equals(type)){
-                                queryCounties();
-                           }
-                       }
-                   });
-               }
-              }
+//              @Override
+//              public void onResponse(Call call, Response response) throws IOException {
+//               String responseText = response.body().string();
+//               boolean resulet = false;
+//               if ("province".equals(type)){
+//                   resulet = Utility.handleProvinceResponse(responseText);
+//
+//               }else if ("city".equals(type)){
+//                   resulet = Utility.handleCityResponse(responseText,selectedProvince.getId());
+//               }else if ("county".equals(type)){
+//                   resulet = Utility.handleCountyResponse(responseText,selectedCity.getId());
+//               }
+//               if (resulet){
+//                   getActivity().runOnUiThread(new Runnable() {
+//                       @Override
+//                       public void run() {
+//                           closeProgressDialog();
+//                           if ("province".equals(type)){
+//                               queryProvinces();
+//                           }else if ("city".equals(type)){
+//                               queryCities();
+//                           }else if ("county".equals(type)){
+//                                queryCounties();
+//                           }
+//                       }
+//                   });
+//               }
+//              }
 
 
 
